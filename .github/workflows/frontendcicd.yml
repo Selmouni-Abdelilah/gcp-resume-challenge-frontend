@@ -1,0 +1,22 @@
+name : Upload Website content to GCS bucket
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  deploy:
+    name: upload website files
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@main
+    # Copy the website content to a GS bucket
+    - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+      run: |
+        gcloud auth activate-service-account --key-file gcp-credentials.json
+        gsutil -m rsync -d -r website/ gs://cloudresume-selmouni1937
+    # Invalidate CDN content
+    - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+      run: gcloud compute url-maps invalidate-cdn-cache url-map --path="/*" --project ${{ secrets.PROJECT }}
+    
